@@ -1,398 +1,4 @@
-            // Progress bar functionality
-            window.addEventListener('scroll', () => {
-                const scrolled = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
-                document.getElementById('progressBar').style.width = scrolled + '%';
-                
-                // Update section navigation
-                updateSectionNavigation();
-            });
-
-            // Theme toggle functionality
-            function toggleTheme() {
-                const body = document.body;
-                const themeBtn = document.querySelector('.theme-toggle');
-                
-                body.classList.toggle('dark-mode');
-                themeBtn.textContent = body.classList.contains('dark-mode') ? '☀️' : '🌙';
-                
-                // Save theme preference
-                localStorage.setItem('theme', body.classList.contains('dark-mode') ? 'dark' : 'light');
-            }
-
-            // Load saved theme
-            function loadTheme() {
-                const savedTheme = localStorage.getItem('theme');
-                if (savedTheme === 'dark') {
-                    document.body.classList.add('dark-mode');
-                    document.querySelector('.theme-toggle').textContent = '☀️';
-                }
-            }
-
-            // Section navigation functionality
-            function updateSectionNavigation() {
-                const sections = document.querySelectorAll('.section');
-                const navDots = document.querySelectorAll('.nav-dot');
-                
-                let currentSection = 1;
-                sections.forEach((section, index) => {
-                    const rect = section.getBoundingClientRect();
-                    if (rect.top <= window.innerHeight / 2 && rect.bottom >= window.innerHeight / 2) {
-                        currentSection = index + 1;
-                    }
-                });
-                
-                navDots.forEach((dot, index) => {
-                    dot.classList.toggle('active', index + 1 === currentSection);
-                });
-            }
-
-            // Search functionality
-            function setupSearch() {
-                const searchInput = document.getElementById('searchInput');
-                const sections = document.querySelectorAll('.section');
-                
-                searchInput.addEventListener('input', (e) => {
-                    const query = e.target.value.toLowerCase();
-                    
-                    sections.forEach(section => {
-                        const content = section.textContent.toLowerCase();
-                        const match = content.includes(query);
-                        
-                        section.style.opacity = query === '' || match ? '1' : '0.3';
-                        section.style.transform = query === '' || match ? 'translateY(0)' : 'translateY(-10px)';
-                    });
-                });
-            }
-
-            // Filter functionality for deliverables
-            function setupFilters() {
-                const filterTabs = document.querySelectorAll('.filter-tab');
-                const tableRows = document.querySelectorAll('#deliverablesTable tbody tr');
-                
-                filterTabs.forEach(tab => {
-                    tab.addEventListener('click', () => {
-                        // Update active tab
-                        filterTabs.forEach(t => t.classList.remove('active'));
-                        tab.classList.add('active');
-                        
-                        const filter = tab.dataset.filter;
-                        
-                        tableRows.forEach(row => {
-                            const type = row.dataset.type;
-                            const show = filter === 'all' || type === filter;
-                            
-                            row.style.display = show ? 'table-row' : 'none';
-                            row.style.opacity = show ? '1' : '0';
-                        });
-                    });
-                });
-            }
-
-            // Expandable content functionality
-            function toggleExpand(id) {
-                const content = document.getElementById(id);
-                const btn = content.previousElementSibling;
-                
-                content.classList.toggle('expanded');
-                btn.textContent = content.classList.contains('expanded') 
-                    ? 'Hide Detailed Breakdown' 
-                    : 'Show Detailed Breakdown';
-            }
-
-            // Modal functionality
-            function openModal(title, content) {
-                const modal = document.getElementById('modalOverlay');
-                const modalTitle = document.getElementById('modalTitle');
-                const modalContent = document.getElementById('modalContent');
-                
-                modalTitle.textContent = title;
-                modalContent.innerHTML = content;
-                modal.classList.add('active');
-            }
-
-            function closeModal() {
-                document.getElementById('modalOverlay').classList.remove('active');
-            }
-
-            // Interactive card clicks
-            function setupInteractiveCards() {
-                const cards = document.querySelectorAll('.interactive-card');
-                
-                cards.forEach(card => {
-                    card.addEventListener('click', () => {
-                        const title = card.cells[0].textContent;
-                        const description = card.cells[2].textContent;
-                        const dod = card.cells[3].textContent;
-                        
-                        const content = `
-                            <div style="margin-bottom: 16px;">
-                                <h4 style="color: #667eea; margin-bottom: 8px;">Description:</h4>
-                                <p>${description}</p>
-                            </div>
-                            <div>
-                                <h4 style="color: #667eea; margin-bottom: 8px;">Definition of Done:</h4>
-                                <p>${dod}</p>
-                            </div>
-                        `;
-                        
-                        openModal(title, content);
-                    });
-                });
-            }
-
-            // Section navigation click handlers
-            function setupSectionNavigation() {
-                const navDots = document.querySelectorAll('.nav-dot');
-                
-                navDots.forEach((dot, index) => {
-                    dot.addEventListener('click', () => {
-                        const targetSection = document.querySelector(`[data-section="${index + 1}"]`);
-                        targetSection.scrollIntoView({ behavior: 'smooth' });
-                    });
-                });
-            }
-
-            // Update completion tracker based on scroll position
-            function updateCompletionTracker() {
-                const scrolled = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
-                const completionRing = document.querySelector('.completion-ring');
-                const completionSpan = completionRing.querySelector('span');
-                
-                const progress = Math.min(Math.max(scrolled, 0), 100);
-                const degrees = (progress / 100) * 360;
-                
-                completionRing.style.setProperty('--progress', `${degrees}deg`);
-                completionSpan.textContent = `${Math.round(progress)}%`;
-            }
-
-            // Keyboard shortcuts
-            function setupKeyboardShortcuts() {
-                document.addEventListener('keydown', (e) => {
-                    if (e.ctrlKey || e.metaKey) {
-                        switch(e.key) {
-                            case 'k':
-                                e.preventDefault();
-                                document.getElementById('searchInput').focus();
-                                break;
-                            case '1':
-                            case '2':
-                            case '3':
-                            case '4':
-                            case '5':
-                            case '6':
-                                e.preventDefault();
-                                const sectionNum = parseInt(e.key);
-                                const section = document.querySelector(`[data-section="${sectionNum}"]`);
-                                if (section) section.scrollIntoView({ behavior: 'smooth' });
-                                break;
-                        }
-                    }
-                    
-                    if (e.key === 'Escape') {
-                        closeModal();
-                    }
-                });
-            }
-
-            // Section toggle functionality
-            document.addEventListener('DOMContentLoaded', () => {
-                const sections = document.querySelectorAll('.section');
-                
-                sections.forEach(section => {
-                    const header = section.querySelector('.section-header');
-                    
-                    header.addEventListener('click', () => {
-                        section.classList.toggle('active');
-                    });
-                });
-
-                // Initialize all functionality
-                loadTheme();
-                setupSearch();
-                setupFilters();
-                setupInteractiveCards();
-                setupSectionNavigation();
-                setupKeyboardShortcuts();
-
-                // Update completion tracker on scroll
-                window.addEventListener('scroll', updateCompletionTracker);
-                updateCompletionTracker(); // Initial update
-
-                // Animate skill bars on scroll
-                const observerOptions = {
-                    root: null,
-                    rootMargin: '0px',
-                    threshold: 0.3
-                };
-
-                const observer = new IntersectionObserver((entries) => {
-                    entries.forEach(entry => {
-                        if (entry.isIntersecting) {
-                            const skillBars = entry.target.querySelectorAll('.skill-bar');
-                            skillBars.forEach(bar => {
-                                const width = bar.style.width;
-                                bar.style.width = '0%';
-                                setTimeout(() => {
-                                    bar.style.width = width;
-                                }, 200);
-                            });
-                        }
-                    });
-                }, observerOptions);
-
-                // Observe sections with skill bars
-                const skillSections = document.querySelectorAll('.section');
-                skillSections.forEach(section => {
-                    if (section.querySelector('.skill-bar')) {
-                        observer.observe(section);
-                    }
-                });
-
-                // Add interactive hover effects to tables
-                const tableRows = document.querySelectorAll('tbody tr');
-                tableRows.forEach(row => {
-                    if (!row.classList.contains('interactive-card')) {
-                        row.addEventListener('mouseenter', () => {
-                            row.style.transform = 'scale(1.01)';
-                            row.style.transition = 'all 0.2s ease';
-                        });
-                        
-                        row.addEventListener('mouseleave', () => {
-                            row.style.transform = 'scale(1)';
-                        });
-                    }
-                });
-
-                // Add click animations to stat cards
-                const statCards = document.querySelectorAll('.stat-card');
-                statCards.forEach(card => {
-                    card.addEventListener('click', () => {
-                        card.style.animation = 'pulse 0.6s ease';
-                        setTimeout(() => {
-                            card.style.animation = '';
-                        }, 600);
-                    });
-                });
-
-                // Add typing effect to search placeholder
-                const searchInput = document.getElementById('searchInput');
-                const placeholders = [
-                    'Search project content...',
-                    'Find deliverables...',
-                    'Search stakeholders...',
-                    'Look for budget items...',
-                    'Find methodology info...'
-                ];
-                let placeholderIndex = 0;
-
-                setInterval(() => {
-                    placeholderIndex = (placeholderIndex + 1) % placeholders.length;
-                    searchInput.placeholder = placeholders[placeholderIndex];
-                }, 3000);
-
-                // Add smooth reveal animation for sections
-                const revealObserver = new IntersectionObserver((entries) => {
-                    entries.forEach(entry => {
-                        if (entry.isIntersecting) {
-                            entry.target.style.opacity = '1';
-                            entry.target.style.transform = 'translateY(0)';
-                        }
-                    });
-                });
-
-                sections.forEach(section => {
-                    section.style.opacity = '0';
-                    section.style.transform = 'translateY(30px)';
-                    section.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-                    revealObserver.observe(section);
-                });
-            });
-
-            // Add pulse animation keyframes
-            const style = document.createElement('style');
-            style.textContent = `
-                @keyframes pulse {
-                    0% { transform: scale(1); }
-                    50% { transform: scale(1.05); }
-                    100% { transform: scale(1); }
-                }
-
-                /* Accessibility improvements */
-                @media (prefers-reduced-motion: reduce) {
-                    *, *::before, *::after {
-                        animation-duration: 0.01ms !important;
-                        animation-iteration-count: 1 !important;
-                        transition-duration: 0.01ms !important;
-                    }
-                }
-
-                /* Focus styles for accessibility */
-                .section-header:focus,
-                .nav-dot:focus,
-                .filter-tab:focus,
-                .expand-btn:focus {
-                    outline: 2px solid #667eea;
-                    outline-offset: 2px;
-                }
-
-                /* Loading animation */
-                @keyframes fadeInUp {
-                    from {
-                        opacity: 0;
-                        transform: translateY(30px);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: translateY(0);
-                    }
-                }
-
-                .section {
-                    animation: fadeInUp 0.6s ease forwards;
-                }
-
-                .section:nth-child(1) { animation-delay: 0.1s; }
-                .section:nth-child(2) { animation-delay: 0.2s; }
-                .section:nth-child(3) { animation-delay: 0.3s; }
-                .section:nth-child(4) { animation-delay: 0.4s; }
-                .section:nth-child(5) { animation-delay: 0.5s; }
-                .section:nth-child(6) { animation-delay: 0.6s; }
-
-                /* Hover effects for interactive elements */
-                .interactive-card:hover {
-                    transform: translateY(-2px);
-                    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
-                }
-
-                .stat-card:hover .stat-number {
-                    text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
-                }
-
-                /* Custom scrollbar */
-                ::-webkit-scrollbar {
-                    width: 8px;
-                }
-
-                ::-webkit-scrollbar-track {
-                    background: #f1f5f9;
-                }
-
-                ::-webkit-scrollbar-thumb {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    border-radius: 4px;
-                }
-
-                ::-webkit-scrollbar-thumb:hover {
-                    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
-                }
-            `;
-            document.head.appendChild(style);
-
-            // Global functions for window scope
-            window.toggleExpand = toggleExpand;
-            window.openModal = openModal;
-            window.closeModal = closeModal;
-            window.toggleTheme = toggleTheme;<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -407,7 +13,7 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 50%, #1e40af 100%);
             min-height: 100vh;
             padding: 20px;
             color: #333;
@@ -436,7 +42,7 @@
         }
 
         .header {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
             color: white;
             padding: 40px;
             text-align: center;
@@ -466,192 +72,6 @@
             font-size: 1.2rem;
             opacity: 0.9;
             position: relative;
-        }
-
-        .content {
-            padding: 40px;
-        }
-
-        .section {
-            margin-bottom: 32px;
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-            overflow: hidden;
-            transition: all 0.3s ease;
-            border: 1px solid #e2e8f0;
-        }
-
-        .section:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12);
-        }
-
-        .section-header {
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-            padding: 24px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid #e2e8f0;
-            transition: all 0.3s ease;
-        }
-
-        .section-header:hover {
-            background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%);
-        }
-
-        .section-header h2 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #1e293b;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .section-number {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-
-        .chevron {
-            transition: transform 0.3s ease;
-            color: #64748b;
-        }
-
-        .section.active .chevron {
-            transform: rotate(180deg);
-        }
-
-        .section-content {
-            padding: 0 24px;
-            max-height: 0;
-            overflow: hidden;
-            transition: all 0.4s ease;
-        }
-
-        .section.active .section-content {
-            max-height: 5000px;
-            padding: 24px;
-        }
-
-        .subsection {
-            margin-bottom: 24px;
-        }
-
-        .subsection h3 {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: #334155;
-            margin-bottom: 12px;
-            padding-left: 16px;
-            border-left: 4px solid #667eea;
-        }
-
-        .table-container {
-            overflow-x: auto;
-            background: #f8fafc;
-            border-radius: 12px;
-            border: 1px solid #e2e8f0;
-            margin: 16px 0;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.9rem;
-        }
-
-        th {
-            background: linear-gradient(135deg, #475569 0%, #334155 100%);
-            color: white;
-            padding: 16px 12px;
-            text-align: left;
-            font-weight: 600;
-        }
-
-        td {
-            padding: 12px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        tr:hover {
-            background: #f1f5f9;
-        }
-
-        .wbs-table td {
-            font-size: 0.85rem;
-        }
-
-        .budget-total {
-            background: linear-gradient(135deg, #059669 0%, #047857 100%);
-            color: white;
-            font-weight: 700;
-        }
-
-        .highlight-box {
-            background: linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%);
-            border-radius: 12px;
-            padding: 20px;
-            margin: 16px 0;
-            border-left: 6px solid #d97706;
-        }
-
-        .highlight-box h4 {
-            color: #92400e;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-
-        .list-item {
-            background: #f8fafc;
-            border-radius: 8px;
-            padding: 12px 16px;
-            margin: 8px 0;
-            border-left: 4px solid #667eea;
-            transition: all 0.2s ease;
-        }
-
-        .list-item:hover {
-            background: #f1f5f9;
-            transform: translateX(8px);
-        }
-
-        .methodology-img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-            margin: 20px 0;
-        }
-
-        .badge {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-        }
-
-        .progress-indicator {
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-            z-index: 1000;
-            transition: width 0.3s ease;
         }
 
         .floating-icons {
@@ -696,19 +116,20 @@
         }
 
         .stat-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
             color: white;
             padding: 24px;
             border-radius: 16px;
             text-align: center;
             transform: scale(0.95);
             transition: all 0.3s ease;
-            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 8px 24px rgba(29, 78, 216, 0.3);
+            cursor: pointer;
         }
 
         .stat-card:hover {
             transform: scale(1);
-            box-shadow: 0 16px 32px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 16px 32px rgba(29, 78, 216, 0.4);
         }
 
         .stat-number {
@@ -716,6 +137,156 @@
             font-weight: 800;
             margin-bottom: 8px;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .search-container {
+            position: sticky;
+            top: 20px;
+            z-index: 100;
+            margin-bottom: 24px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 12px 16px 12px 44px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>') no-repeat 16px center;
+            background-size: 20px;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #1d4ed8;
+            box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.1);
+        }
+
+        .section {
+            margin-bottom: 32px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            border: 1px solid #e2e8f0;
+        }
+
+        .section:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12);
+        }
+
+        .section-header {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            padding: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .section-header:hover {
+            background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%);
+        }
+
+        .section-header h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-number {
+            background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .chevron {
+            transition: transform 0.3s ease;
+            color: #64748b;
+        }
+
+        .section.active .chevron {
+            transform: rotate(180deg);
+        }
+
+        .section-content {
+            padding: 0 24px;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.4s ease;
+        }
+
+        .section.active .section-content {
+            max-height: 5000px;
+            padding: 24px;
+        }
+
+        .subsection {
+            margin-bottom: 24px;
+        }
+
+        .subsection h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 12px;
+            padding-left: 16px;
+            border-left: 4px solid #10b981;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            background: #f8fafc;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            margin: 16px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        th {
+            background: linear-gradient(135deg, #475569 0%, #334155 100%);
+            color: white;
+            padding: 16px 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        tr:hover {
+            background: #f1f5f9;
         }
 
         .timeline {
@@ -731,7 +302,7 @@
             top: 0;
             bottom: 0;
             width: 3px;
-            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(180deg, #1d4ed8 0%, #10b981 100%);
             border-radius: 2px;
         }
 
@@ -757,49 +328,10 @@
             top: 24px;
             width: 16px;
             height: 16px;
-            background: #667eea;
+            background: #10b981;
             border-radius: 50%;
             border: 4px solid white;
-            box-shadow: 0 0 0 2px #667eea;
-        }
-
-        .interactive-tooltip {
-            position: relative;
-            display: inline-block;
-            border-bottom: 2px dotted #667eea;
-            cursor: help;
-        }
-
-        .tooltip-content {
-            visibility: hidden;
-            opacity: 0;
-            position: absolute;
-            bottom: 125%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #1e293b;
-            color: white;
-            padding: 12px 16px;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            white-space: nowrap;
-            z-index: 1000;
-            transition: all 0.3s ease;
-        }
-
-        .tooltip-content::after {
-            content: '';
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            border: 6px solid transparent;
-            border-top-color: #1e293b;
-        }
-
-        .interactive-tooltip:hover .tooltip-content {
-            visibility: visible;
-            opacity: 1;
+            box-shadow: 0 0 0 2px #10b981;
         }
 
         .skill-progress {
@@ -835,33 +367,111 @@
             100% { transform: translateX(100%); }
         }
 
-        .search-container {
-            position: sticky;
-            top: 20px;
-            z-index: 100;
-            margin-bottom: 24px;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 16px;
-            padding: 16px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        .interactive-tooltip {
+            position: relative;
+            display: inline-block;
+            border-bottom: 2px dotted #1d4ed8;
+            cursor: help;
         }
 
-        .search-box {
-            width: 100%;
-            padding: 12px 16px 12px 44px;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            font-size: 1rem;
+        .tooltip-content {
+            visibility: hidden;
+            opacity: 0;
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e293b;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            z-index: 1000;
             transition: all 0.3s ease;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>') no-repeat 16px center;
-            background-size: 20px;
         }
 
-        .search-box:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        .tooltip-content::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: #1e293b;
+        }
+
+        .interactive-tooltip:hover .tooltip-content {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .list-item {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin: 8px 0;
+            border-left: 4px solid #10b981;
+            transition: all 0.2s ease;
+        }
+
+        .list-item:hover {
+            background: #f1f5f9;
+            transform: translateX(8px);
+        }
+
+        .highlight-box {
+            background: linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 16px 0;
+            border-left: 6px solid #d97706;
+        }
+
+        .highlight-box h4 {
+            color: #92400e;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .badge {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .progress-indicator {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #1d4ed8 0%, #10b981 100%);
+            z-index: 1000;
+            transition: width 0.3s ease;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            width: 56px;
+            height: 56px;
+            cursor: pointer;
+            font-size: 1.5rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1) rotate(15deg);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
         }
 
         .section-navigation {
@@ -889,12 +499,12 @@
         }
 
         .nav-dot.active {
-            background: #667eea;
+            background: #1d4ed8;
             transform: scale(1.3);
         }
 
         .nav-dot:hover {
-            background: #667eea;
+            background: #1d4ed8;
             transform: scale(1.2);
         }
 
@@ -919,127 +529,6 @@
             visibility: visible;
         }
 
-        .theme-toggle {
-            position: fixed;
-            top: 24px;
-            right: 24px;
-            z-index: 1000;
-            background: rgba(255, 255, 255, 0.9);
-            border: none;
-            border-radius: 50%;
-            width: 56px;
-            height: 56px;
-            cursor: pointer;
-            font-size: 1.5rem;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-        }
-
-        .theme-toggle:hover {
-            transform: scale(1.1) rotate(15deg);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-        }
-
-        body.dark-mode {
-            background: linear-gradient(135deg, #1e1e2e 0%, #2d1b69 100%);
-            color: #e2e8f0;
-        }
-
-        .dark-mode .container {
-            background: rgba(30, 30, 46, 0.95);
-            color: #e2e8f0;
-        }
-
-        .dark-mode .section {
-            background: #2a2a3a;
-            border-color: #404040;
-        }
-
-        .dark-mode .section-header {
-            background: linear-gradient(135deg, #2a2a3a 0%, #404040 100%);
-        }
-
-        .dark-mode .section-header h2 {
-            color: #e2e8f0;
-        }
-
-        .interactive-card {
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .interactive-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-            transition: left 0.5s ease;
-        }
-
-        .interactive-card:hover::before {
-            left: 100%;
-        }
-
-        .expandable-content {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.5s ease;
-        }
-
-        .expandable-content.expanded {
-            max-height: 1000px;
-        }
-
-        .expand-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
-            margin-top: 12px;
-        }
-
-        .expand-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-        }
-
-        .filter-tabs {
-            display: flex;
-            gap: 8px;
-            margin: 16px 0;
-            flex-wrap: wrap;
-        }
-
-        .filter-tab {
-            padding: 8px 16px;
-            border: 2px solid #e2e8f0;
-            background: white;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 0.9rem;
-        }
-
-        .filter-tab.active {
-            background: #667eea;
-            border-color: #667eea;
-            color: white;
-        }
-
-        .filter-tab:hover {
-            border-color: #667eea;
-            transform: translateY(-2px);
-        }
-
         .completion-tracker {
             position: fixed;
             bottom: 24px;
@@ -1056,7 +545,7 @@
             width: 60px;
             height: 60px;
             border-radius: 50%;
-            background: conic-gradient(#667eea 0deg, #667eea var(--progress), #e2e8f0 var(--progress), #e2e8f0 360deg);
+            background: conic-gradient(#10b981 0deg, #10b981 var(--progress), #e2e8f0 var(--progress), #e2e8f0 360deg);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1079,57 +568,150 @@
             z-index: 1;
         }
 
-        .modal-overlay {
+        /* Milestone Celebration Styles */
+        .milestone-celebration {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
-            z-index: 2000;
+            z-index: 3000;
+            pointer-events: none;
             opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
+            transition: opacity 0.5s ease;
         }
 
-        .modal-overlay.active {
+        .milestone-celebration.active {
             opacity: 1;
-            visibility: visible;
+            pointer-events: auto;
         }
 
-        .modal {
+        .celebration-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.2) 0%, rgba(29, 78, 216, 0.1) 100%);
+            backdrop-filter: blur(2px);
+        }
+
+        .celebration-content {
             position: absolute;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%) scale(0.8);
+            transform: translate(-50%, -50%);
+            text-align: center;
             background: white;
-            border-radius: 20px;
-            padding: 32px;
+            border-radius: 24px;
+            padding: 48px;
+            box-shadow: 0 32px 64px rgba(0, 0, 0, 0.2);
             max-width: 500px;
             width: 90%;
-            box-shadow: 0 32px 64px rgba(0, 0, 0, 0.3);
-            transition: transform 0.3s ease;
+            animation: celebrationBounce 0.8s ease;
         }
 
-        .modal-overlay.active .modal {
-            transform: translate(-50%, -50%) scale(1);
+        @keyframes celebrationBounce {
+            0% { transform: translate(-50%, -50%) scale(0.3) rotate(-10deg); }
+            50% { transform: translate(-50%, -50%) scale(1.05) rotate(5deg); }
+            100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
         }
 
-        .close-modal {
-            position: absolute;
-            top: 16px;
-            right: 16px;
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: #64748b;
-            transition: color 0.3s ease;
+        .celebration-icon {
+            font-size: 4rem;
+            margin-bottom: 16px;
+            animation: celebrationPulse 1s infinite;
         }
 
-        .close-modal:hover {
+        @keyframes celebrationPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .celebration-title {
+            font-size: 2rem;
+            font-weight: 800;
             color: #1e293b;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #1d4ed8 0%, #10b981 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .celebration-message {
+            font-size: 1.2rem;
+            color: #64748b;
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+
+        .celebration-close {
+            background: linear-gradient(135deg, #1d4ed8 0%, #10b981 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .celebration-close:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(29, 78, 216, 0.3);
+        }
+
+        .milestone-checkbox {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #d1d5db;
+            border-radius: 4px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+            margin-right: 8px;
+        }
+
+        .milestone-checkbox:checked {
+            background: linear-gradient(135deg, #1d4ed8 0%, #10b981 100%);
+            border-color: #10b981;
+        }
+
+        .milestone-checkbox:checked::before {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .milestone-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .milestone-item:hover {
+            background: #f8fafc;
+        }
+
+        .milestone-item.completed {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(29, 78, 216, 0.05) 100%);
+            text-decoration: line-through;
+            opacity: 0.8;
+        }
+
+        .milestone-item.completed .milestone-text {
+            color: #6b7280;
         }
 
         @media (max-width: 768px) {
@@ -1151,6 +733,11 @@
             
             table {
                 font-size: 0.8rem;
+            }
+
+            .section-navigation,
+            .completion-tracker {
+                display: none;
             }
         }
     </style>
@@ -1234,9 +821,10 @@
             <div class="search-container">
                 <input type="text" class="search-box" placeholder="Search project content..." id="searchInput">
             </div>
+
             <!-- Section 1: Project Title & Description -->
             <div class="section active" data-section="1">
-                <div class="section-header">
+                <div class="section-header" onclick="toggleSection(this)">
                     <h2><span class="section-number">1</span>Project Title & Description</h2>
                     <span class="chevron">▼</span>
                 </div>
@@ -1251,7 +839,7 @@
 
             <!-- Section 2: Vision, Mission & Strategy Alignment -->
             <div class="section" data-section="2">
-                <div class="section-header">
+                <div class="section-header" onclick="toggleSection(this)">
                     <h2><span class="section-number">2</span>Vision, Mission & Strategy Alignment</h2>
                     <span class="chevron">▼</span>
                 </div>
@@ -1266,477 +854,7 @@
                         <p>In the next five years, I see myself working in the IT industry in either the cybersecurity or networking sector. I plan to earn certifications such as CompTIA A+, Network+, Security+, and CCNA. I am working toward a future in IT management and plan to pursue a master's degree to deepen my knowledge.</p>
                     </div>
                     
-                <div class="section-content">
                     <div class="subsection">
                         <h3>Strategic Goal Support</h3>
                         <div class="timeline">
-                            <div class="timeline-item">
-                                <h4 style="margin-bottom: 8px; color: #1e293b;">🎓 Obtain industry-recognized certifications</h4>
-                                <p style="font-size: 0.9rem; color: #64748b;">Focus on CompTIA A+, Network+, Security+, and CCNA certifications</p>
-                            </div>
-                            <div class="timeline-item">
-                                <h4 style="margin-bottom: 8px; color: #1e293b;">💼 Work or volunteer in an IT position</h4>
-                                <p style="font-size: 0.9rem; color: #64748b;">Gain practical experience through internships and volunteer opportunities</p>
-                            </div>
-                            <div class="timeline-item">
-                                <h4 style="margin-bottom: 8px; color: #1e293b;">🔧 Get hands-on experience in cybersecurity and networking fundamentals</h4>
-                                <p style="font-size: 0.9rem; color: #64748b;">Complete labs, simulations, and real-world projects</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Section 3: Business Case & Justification -->
-            <div class="section" data-section="3">
-                <div class="section-header">
-                    <h2><span class="section-number">3</span>Business Case & Justification</h2>
-                    <span class="chevron">▼</span>
-                </div>
-                <div class="section-content">
-                    <div class="subsection">
-                        <h3>Professional Value</h3>
-                        <p>This project will benefit my career by highlighting what I have learned during my studies. It will also enhance my portfolio with examples of projects and hands-on experience. Additionally, it will encourage me to apply for internships and volunteer more at work, church, and wherever I am able to gain experience.</p>
-                    </div>
-                    
-                    <div class="subsection">
-                        <h3>Personal Value</h3>
-                        <p>This project will grant me personal satisfaction, skill development, and a structured way to deepen my learning while building a portfolio that helps ensure my job applications are taken seriously. I will strengthen fundamentals in networking, cybersecurity, and troubleshooting as a foundation for continued growth—serving as a stepping stone into the IT workforce.</p>
-                    </div>
-                    
-                    <div class="subsection">
-                        <h3>Learning Outcomes</h3>
-                        <p style="margin-bottom: 20px;">This project will teach me project management, industry knowledge, technical skills, and networking skills. Hands-on assignments—such as labs and online courses—will reinforce learning and retention. I will also build a professional portfolio and a lightweight website to showcase my skills, and expand my network through meetups (e.g., Eventbrite), campus guest speakers, and job fairs at Cal State LA.</p>
-                        
-                        <div style="margin-top: 24px;">
-                            <h4 style="margin-bottom: 16px; color: #1e293b;">Key Skills Development Progress</h4>
-                            
-                            <div style="margin-bottom: 16px;">
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                                    <span class="interactive-tooltip">Networking Fundamentals
-                                        <span class="tooltip-content">Cisco Network Technician Path + CCNA preparation</span>
-                                    </span>
-                                    <span style="font-weight: 600; color: #059669;">75%</span>
-                                </div>
-                                <div class="skill-progress">
-                                    <div class="skill-bar" style="width: 75%;"></div>
-                                </div>
-                            </div>
-                            
-                            <div style="margin-bottom: 16px;">
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                                    <span class="interactive-tooltip">Cybersecurity
-                                        <span class="tooltip-content">ISC2 CC + CompTIA Security+ + hands-on labs</span>
-                                    </span>
-                                    <span style="font-weight: 600; color: #059669;">60%</span>
-                                </div>
-                                <div class="skill-progress">
-                                    <div class="skill-bar" style="width: 60%;"></div>
-                                </div>
-                            </div>
-                            
-                            <div style="margin-bottom: 16px;">
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                                    <span class="interactive-tooltip">Project Management
-                                        <span class="tooltip-content">Monday.com + predictive methodology</span>
-                                    </span>
-                                    <span style="font-weight: 600; color: #059669;">85%</span>
-                                </div>
-                                <div class="skill-progress">
-                                    <div class="skill-bar" style="width: 85%;"></div>
-                                </div>
-                            </div>
-                            
-                            <div style="margin-bottom: 16px;">
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                                    <span class="interactive-tooltip">Portfolio Development
-                                        <span class="tooltip-content">GitHub Pages + professional presentation</span>
-                                    </span>
-                                    <span style="font-weight: 600; color: #059669;">40%</span>
-                                </div>
-                                <div class="skill-progress">
-                                    <div class="skill-bar" style="width: 40%;"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Section 4: High-Level Scope -->
-            <div class="section" data-section="4">
-                <div class="section-header">
-                    <h2><span class="section-number">4</span>High-Level Scope</h2>
-                    <span class="chevron">▼</span>
-                </div>
-                <div class="section-content">
-                    <div class="subsection">
-                        <h3>In Scope</h3>
-                        <div class="list-item">Build digital portfolio</div>
-                        <div class="list-item">Research objectives and strategize certification for CompTIA A+</div>
-                        <div class="list-item">Complete Cisco's IT Support Specialist Path</div>
-                        <div class="list-item">Complete Cisco's Network Technician Path</div>
-                        <div class="list-item">Complete Cisco's Junior Cybersecurity Analyst Path</div>
-                        <div class="list-item">Include knowledge of SQL, Python, and Oracle databases</div>
-                        <div class="list-item">Build personal website to house digital portfolio</div>
-                    </div>
-                    
-                    <div class="subsection">
-                        <h3>Roadmap Items</h3>
-                        <div class="list-item">Resume update linking digital portfolio</div>
-                        <div class="list-item">Post completion badges to website</div>
-                        <div class="list-item">Attempt certification in CompTIA A+</div>
-                        <div class="list-item">Study for either CCNA, Network+, or Security+</div>
-                        <div class="list-item">Apply for jobs</div>
-                    </div>
-                    
-                    <div class="subsection">
-                        <h3>Out of Scope</h3>
-                        <div class="list-item">Build home lab</div>
-                        <div class="list-item">Build portfolio website from scratch</div>
-                        <div class="list-item">Learn HTML, CSS, and JavaScript</div>
-                        <div class="list-item">Apply to jobs prematurely</div>
-                        <div class="list-item">Spend money on certification exams too soon</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Section 5: Stakeholder Register -->
-            <div class="section" data-section="5">
-                <div class="section-header">
-                    <h2><span class="section-number">5</span>Stakeholder Register</h2>
-                    <span class="chevron">▼</span>
-                </div>
-                <div class="section-content">
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Stakeholder</th>
-                                    <th>Category</th>
-                                    <th>Role/Interest</th>
-                                    <th>Power</th>
-                                    <th>Interest</th>
-                                    <th>Engagement Strategy</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Myself & Wife</td>
-                                    <td><span class="badge">Internal</span></td>
-                                    <td>Provide resources, time, motivation, and accountability</td>
-                                    <td>High</td>
-                                    <td>High</td>
-                                    <td>Manage closely — weekly check-ins, milestone celebrations</td>
-                                </tr>
-                                <tr>
-                                    <td>Current Job</td>
-                                    <td><span class="badge">Internal</span></td>
-                                    <td>Potential to apply new skills and allocate study time</td>
-                                    <td>Medium</td>
-                                    <td>Medium</td>
-                                    <td>Keep satisfied — share graduation and certification plans</td>
-                                </tr>
-                                <tr>
-                                    <td>Professors / Mentors</td>
-                                    <td><span class="badge">External</span></td>
-                                    <td>Offer guidance, feedback, and career advice</td>
-                                    <td>Medium</td>
-                                    <td>Medium</td>
-                                    <td>Keep satisfied — periodic emails or meetings</td>
-                                </tr>
-                                <tr>
-                                    <td>Peer Learners / Study Groups</td>
-                                    <td><span class="badge">External</span></td>
-                                    <td>Collaborative learning and motivation</td>
-                                    <td>Low</td>
-                                    <td>Low</td>
-                                    <td>Monitor — participate in forums and group sessions</td>
-                                </tr>
-                                <tr>
-                                    <td>Certification Providers</td>
-                                    <td><span class="badge">External</span></td>
-                                    <td>Validate knowledge with recognized credentials</td>
-                                    <td>High</td>
-                                    <td>High</td>
-                                    <td>Manage closely — follow exam requirements</td>
-                                </tr>
-                                <tr>
-                                    <td>Future Employers / Recruiters</td>
-                                    <td><span class="badge">External</span></td>
-                                    <td>Interested in portfolio, skills, and certifications</td>
-                                    <td>High</td>
-                                    <td>High</td>
-                                    <td>Manage closely — share updates via LinkedIn and networking</td>
-                                </tr>
-                                <tr>
-                                    <td>IT Communities / Local Meetups</td>
-                                    <td><span class="badge">External</span></td>
-                                    <td>Networking, knowledge exchange, mentorship</td>
-                                    <td>Medium</td>
-                                    <td>Medium</td>
-                                    <td>Keep informed — attend events and contribute</td>
-                                </tr>
-                                <tr>
-                                    <td>Regulatory Framework Bodies</td>
-                                    <td><span class="badge">External</span></td>
-                                    <td>Provide cybersecurity standards and frameworks</td>
-                                    <td>Low</td>
-                                    <td>Low</td>
-                                    <td>Monitor — align learning with guidelines</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Section 6: Deliverables & Definition of Done -->
-            <div class="section" data-section="6">
-                <div class="section-header">
-                    <h2><span class="section-number">6</span>Deliverables & Definition of Done</h2>
-                    <span class="chevron">▼</span>
-                </div>
-                <div class="section-content">
-                    <!-- Filter Tabs -->
-                    <div class="filter-tabs">
-                        <div class="filter-tab active" data-filter="all">All Deliverables</div>
-                        <div class="filter-tab" data-filter="project">Project</div>
-                        <div class="filter-tab" data-filter="certification">Certification</div>
-                        <div class="filter-tab" data-filter="career">Career</div>
-                    </div>
-
-                    <div class="table-container">
-                        <table id="deliverablesTable">
-                            <thead>
-                                <tr>
-                                    <th>Deliverable Name</th>
-                                    <th>Type</th>
-                                    <th>SMART Description</th>
-                                    <th>Definition of Done</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="interactive-card" data-type="project">
-                                    <td>GitHub Portfolio</td>
-                                    <td>Project Deliverable</td>
-                                    <td>Create and publish a personal GitHub portfolio site that is accessible, professional, and showcases coursework as well as certifications.</td>
-                                    <td>Portfolio website published on GitHub with working navigation, links, and professional presentation.</td>
-                                    <td><span style="background: #fbbf24; color: white; padding: 4px 8px; border-radius: 12px; font-size: 0.8rem;">In Progress</span></td>
-                                </tr>
-                                <tr class="interactive-card" data-type="certification">
-                                    <td>Networking Fundamentals Badge</td>
-                                    <td>Certification Deliverable</td>
-                                    <td>Complete Cisco Networking Academy's Networking Technician Path and earn a certificate to demonstrate networking skills.</td>
-                                    <td>Completion certificate earned from Cisco Networking Academy.</td>
-                                    <td><span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 12px; font-size: 0.8rem;">Completed</span></td>
-                                </tr>
-                                <tr class="interactive-card" data-type="certification">
-                                    <td>Cybersecurity Fundamentals Badge</td>
-                                    <td>Certification Deliverable</td>
-                                    <td>Complete Cisco's Cybersecurity Analyst Path and hands-on labs, documenting experience and earning a certificate.</td>
-                                    <td>Completion of Cisco Cybersecurity Analyst Path with certificate and labs documented.</td>
-                                    <td><span style="background: #6b7280; color: white; padding: 4px 8px; border-radius: 12px; font-size: 0.8rem;">Not Started</span></td>
-                                </tr>
-                                <tr class="interactive-card" data-type="certification">
-                                    <td>ISC2 & Security+ Certifications</td>
-                                    <td>Certification Deliverable</td>
-                                    <td>Complete ISC2 CC and CompTIA Security+ certifications to validate cybersecurity knowledge and skills.</td>
-                                    <td>Both exams passed and certificates uploaded to GitHub portfolio.</td>
-                                    <td><span style="background: #6b7280; color: white; padding: 4px 8px; border-radius: 12px; font-size: 0.8rem;">Not Started</span></td>
-                                </tr>
-                                <tr class="interactive-card" data-type="career">
-                                    <td>Apply for a Job in IT</td>
-                                    <td>Career Deliverable</td>
-                                    <td>Update resume and portfolio, submit at least 10 applications, and secure interviews for IT positions.</td>
-                                    <td>Resume updated, applications submitted, interviews secured, and an offer obtained.</td>
-                                    <td><span style="background: #6b7280; color: white; padding: 4px 8px; border-radius: 12px; font-size: 0.8rem;">Planned</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="subsection">
-                        <h3>Deliverable 1 — GitHub Portfolio (WBS)</h3>
-                        <button class="expand-btn" onclick="toggleExpand('wbs1')">Show Detailed Breakdown</button>
-                        <div class="expandable-content" id="wbs1">
-                            <table class="wbs-table">
-                                <thead>
-                                    <tr>
-                                        <th>WBS ID</th>
-                                        <th>Level</th>
-                                        <th>Task/Work Package Name</th>
-                                        <th>Duration (days)</th>
-                                        <th>Dependencies</th>
-                                        <th>Parallel</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>1</td>
-                                        <td>Deliverable</td>
-                                        <td>GitHub Portfolio</td>
-                                        <td>24</td>
-                                        <td>--</td>
-                                        <td></td>
-                                    </tr>
-                                    <tr>
-                                        <td>1.1</td>
-                                        <td>Work Package</td>
-                                        <td>Structure GitHub webpage</td>
-                                        <td>6</td>
-                                        <td>--</td>
-                                        <td></td>
-                                    </tr>
-                                    <tr>
-                                        <td>1.1.1</td>
-                                        <td>Task</td>
-                                        <td>Create GitHub page</td>
-                                        <td>1</td>
-                                        <td>--</td>
-                                        <td>Task 1.1.2 (1 day) || Task 1.1.3 (3 days)</td>
-                                    </tr>
-                                    <tr>
-                                        <td>1.1.2</td>
-                                        <td>Task</td>
-                                        <td>YouTube: how to make a portfolio</td>
-                                        <td>1</td>
-                                        <td>1.1.1 Create GitHub page</td>
-                                        <td></td>
-                                    </tr>
-                                    <tr>
-                                        <td>1.1.3</td>
-                                        <td>Task</td>
-                                        <td>Use template or create own landing page</td>
-                                        <td>3</td>
-                                        <td>1.1.1 Create GitHub page</td>
-                                        <td></td>
-                                    </tr>
-                                    <tr>
-                                        <td>1.1.4</td>
-                                        <td>Task</td>
-                                        <td>Make webpage public</td>
-                                        <td>2</td>
-                                        <td>1.1.1 Create GitHub page</td>
-                                        <td></td>
-                                    </tr>
-                                    <tr>
-                                        <td>1.2</td>
-                                        <td>Work Package</td>
-                                        <td>Place professional profile picture</td>
-                                        <td>1</td>
-                                        <td>1.1 Structure GitHub webpage</td>
-                                        <td></td>
-                                    </tr>
-                                    <tr>
-                                        <td>1.2.1</td>
-                                        <td>Task</td>
-                                        <td>YouTube: how to place profile picture</td>
-                                        <td>1</td>
-                                        <td>--</td>
-                                        <td>Task 1.2.1 (1 day) || Task 1.2.2 (1 day)</td>
-                                    </tr>
-                                    <tr>
-                                        <td>1.2.2</td>
-                                        <td>Task</td>
-                                        <td>Upload professional profile picture</td>
-                                        <td>1</td>
-                                        <td>1.1.1 Create GitHub page</td>
-                                        <td></td>
-                                    </tr>
-                                    <tr>
-                                        <td>1.3</td>
-                                        <td>Work Package</td>
-                                        <td>Ability to navigate through GitHub</td>
-                                        <td>6</td>
-                                        <td>1.1 Structure GitHub webpage</td>
-                                        <td></td>
-                                    </tr>
-                                    <tr>
-                                        <td>1.3.1</td>
-                                        <td>Task</td>
-                                        <td>YouTube: how to design GitHub functionality</td>
-                                        <td>2</td>
-                                        <td>--</td>
-                                        <td></td>
-                                    </tr>
-                                    <tr>
-                                        <td>1.3.2</td>
-                                        <td>Task</td>
-                                        <td>Use ChatGPT as needed to code webpage</td>
-                                        <td>2</td>
-                                        <td>1.3.1 YouTube: how to design GitHub functionality</td>
-                                        <td></td>
-                                    </tr>
-                                    <tr>
-                                        <td>1.3.3</td>
-                                        <td>Task</td>
-                                        <td>Use working links to external sites</td>
-                                        <td>2</td>
-                                        <td>1.3.1 YouTube: how to design GitHub functionality</td>
-                                        <td></td>
-                                    </tr>
-                                    <tr>
-                                        <td>1.4</td>
-                                        <td>Work Package</td>
-                                        <td>Verifying profile works properly</td>
-                                        <td>11</td>
-                                        <td></td>
-                                        <td></td>
-                                    </tr>
-                                    <tr>
-                                        <td>1.4.1</td>
-                                        <td>Task</td>
-                                        <td>Verify GitHub is accessible</td>
-                                        <td>1</td>
-                                        <td>1.1.4 Make webpage public</td>
-                                        <td></td>
-                                    </tr>
-                                    <tr>
-                                        <td>1.4.2</td>
-                                        <td>Task</td>
-                                        <td>Confirm links are working properly</td>
-                                        <td>3</td>
-                                        <td>--</td>
-                                        <td></td>
-                                    </tr>
-                                    <tr>
-                                        <td>1.4.4</td>
-                                        <td>Task</td>
-                                        <td>Make sure navigation is smooth</td>
-                                        <td>5</td>
-                                        <td>1.3.1 YouTube: how to design GitHub functionality</td>
-                                        <td></td>
-                                    </tr>
-                                    <tr>
-                                        <td>1.3.4</td>
-                                        <td>Task</td>
-                                        <td>Add LinkedIn profile to GitHub</td>
-                                        <td>2</td>
-                                        <td>--</td>
-                                        <td></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div class="subsection">
-                        <h3>Deliverable 2 — Networking Fundamentals Badge (WBS)</h3>
-                        <div class="table-container">
-                            <table class="wbs-table">
-                                <thead>
-                                    <tr>
-                                        <th>WBS ID</th>
-                                        <th>Level</th>
-                                        <th>Task/Work Package Name</th>
-                                        <th>Duration (days)</th>
-                                        <th>Dependencies</th>
-                                        <th>Parallel</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>2</td>
-                                        
+                            <div class="timeline-
